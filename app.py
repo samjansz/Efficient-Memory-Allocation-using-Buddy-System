@@ -1,3 +1,5 @@
+import argparse
+
 #Node class to represent each memory block.
 class Node:
     def __init__(self, size, start_address=0):
@@ -140,21 +142,25 @@ class BuddySystem:
 
 
 
-# Initialize the Buddy System
-buddy_system = BuddySystem(1024, 16)
+def run_cli():
+    parser = argparse.ArgumentParser(description="Buddy System Memory Management CLI")
 
-# Allocate memory
-block1 = buddy_system.allocate(100)
-block2 = buddy_system.allocate(200)
+    parser.add_argument('-a', '--allocate', type=int, help="Allocate memory of specified size in KB")
+    parser.add_argument('-d', '--deallocate', type=int, help="Deallocate memory at specified address")
+    parser.add_argument('-s', '--show', action='store_true', help="Display current memory status")
 
-# Display memory before deallocation
-print("\nMemory before deallocation:")
-buddy_system.display_memory()
+    args = parser.parse_args()
 
-# Deallocate memory
-buddy_system.deallocate(0)
-buddy_system.deallocate(256)
+    buddy_system = BuddySystem(1024, 16)
 
-# Display memory after deallocation
-print("\nMemory after deallocation:")
-buddy_system.display_memory()
+    if args.allocate:
+        buddy_system.allocate(args.allocate)
+    elif args.deallocate:
+        buddy_system.deallocate(args.deallocate)
+    elif args.show:
+        buddy_system.display_memory()
+    else:
+        parser.print_help()
+
+if __name__ == '__main__':
+    run_cli()
