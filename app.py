@@ -164,3 +164,7 @@ def run_cli():
 
 if __name__ == '__main__':
     run_cli()
+    
+#python app.py --allocate 100
+#python app.py --deallocate 0
+#python app.py --show
