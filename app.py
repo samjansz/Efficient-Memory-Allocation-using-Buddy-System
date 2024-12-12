@@ -67,18 +67,6 @@ class BuddySystem:
             power *= 2
         return power
 
-
-    def display_memory(self, node=None, level=0):
-        # Display the memory tree structure
-        if node is None:
-            node = self.root
-        print(" " * (level * 4) + f"Block: {node.size} KB, Free: {node.is_free}")
-        if node.left:
-            self.display_memory(node.left, level + 1)
-        if node.right:
-            self.display_memory(node.right, level + 1)
-
-
     # Memory Deallocation
     def deallocate(self, start_address):
         if not self._deallocate_block(self.root, start_address):
