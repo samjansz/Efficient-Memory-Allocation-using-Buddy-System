@@ -1,6 +1,7 @@
 import argparse
+import pickle
 
-#Node class to represent each memory block.
+#Node class to represent each memory block in the binary tree.
 class Node:
     def __init__(self, size, start_address=0):
         self.size = size
@@ -13,13 +14,21 @@ class Node:
         return f"Node(size={self.size}, start_address={self.start_address}, is_free={self.is_free})"
 
 
-#Buddy System Manager to tracks the entire memory hierarchy
+#Buddy System to tracks the entire memory hierarchy
 class BuddySystem:
+    #Memory Initialization
     def __init__(self, total_size, min_block_size):
         self.root = Node(total_size)
         self.min_block_size = min_block_size
         print(f"Initialized Buddy System with {total_size} KB total memory and {min_block_size} KB minimum block size.")
     
+    #Calculates the next power of two greater than or equal to the requested size
+    def _next_power_of_two(self, n):
+        power = 1
+        while power < n:
+            power *= 2
+        return power
+
     #Memory Allocation
     def allocate(self, size):
         if size > self.root.size:
@@ -33,6 +42,7 @@ class BuddySystem:
             print("Error: Not enough memory to allocate.")
         return allocated_block
 
+    #To find the smallest free block that fits the request
     def _allocate_block(self, node, size):
         if node.size < size:
             print(f"Skipping block: {node.size} KB (too small)")
@@ -50,7 +60,7 @@ class BuddySystem:
         # If the node has no children, split it and try again
         self._split(node)
         return self._allocate_block(node, size)
-
+    
     def _split(self, node):
         if node.left or node.right:
             return
@@ -59,14 +69,7 @@ class BuddySystem:
         node.right = Node(half_size, node.start_address + half_size)
         node.is_free = False 
         print(f"Split {node.size} KB block into two {half_size} KB blocks.")
-
-    def _next_power_of_two(self, n):
-        # Find the next power of two greater than or equal to n
-        power = 1
-        while power < n:
-            power *= 2
-        return power
-
+    
     # Memory Deallocation
     def deallocate(self, start_address):
         if not self._deallocate_block(self.root, start_address):
@@ -101,7 +104,6 @@ class BuddySystem:
             node.left = None  
             node.right = None  
             node.is_free = True  
-
         # Recursively attempt to merge upward
         parent = self._find_parent(self.root, node)
         if parent and parent.left and parent.right and parent.left.is_free and parent.right.is_free:
@@ -111,8 +113,6 @@ class BuddySystem:
         # Find the parent of a given node
         if current is None or (current.left == child or current.right == child):
             return current
-
-        # Search in the left or right subtree
         left_search = self._find_parent(current.left, child)
         if left_search:
             return left_search
@@ -128,27 +128,47 @@ class BuddySystem:
         if node.right:
             self.display_memory(node.right, level + 1)
 
+    #To Save the Memory State
+    def save_state(self, filename="memory_state.pkl"):
+        with open(filename, "wb") as file:
+            pickle.dump(self.root, file)
+        print("Memory state saved.")
+
+    #To Load the Memory State
+    def load_state(self, filename="memory_state.pkl"):
+        try:
+            with open(filename, "rb") as file:
+                self.root = pickle.load(file)
+            print("Memory state loaded.")
+        except FileNotFoundError:
+            print("No previous memory state found. Initializing new system.")
+
 
 
 def run_cli():
+    #Parse the arguments
     parser = argparse.ArgumentParser(description="Buddy System Memory Management CLI")
-
     parser.add_argument('-a', '--allocate', type=int, help="Allocate memory of specified size in KB")
     parser.add_argument('-d', '--deallocate', type=int, help="Deallocate memory at specified address")
     parser.add_argument('-s', '--show', action='store_true', help="Display current memory status")
-
     args = parser.parse_args()
 
+    # Initialize the Buddy System
     buddy_system = BuddySystem(1024, 16)
+    buddy_system.load_state()
 
-    if args.allocate:
+    # Check arguments and call appropriate functions
+    if args.allocate is not None:
         buddy_system.allocate(args.allocate)
-    elif args.deallocate:
+    elif args.deallocate is not None:
         buddy_system.deallocate(args.deallocate)
     elif args.show:
         buddy_system.display_memory()
     else:
         parser.print_help()
+
+    # Save the state after any operation
+    buddy_system.save_state()
 
 if __name__ == '__main__':
     run_cli()
