@@ -21,13 +21,6 @@ class BuddySystem:
         self.root = Node(total_size)
         self.min_block_size = min_block_size
         print(f"Initialized Buddy System with {total_size} KB total memory and {min_block_size} KB minimum block size.")
-    
-    #Calculates the next power of two greater than or equal to the requested size
-    def _next_power_of_two(self, n):
-        power = 1
-        while power < n:
-            power *= 2
-        return power
 
     #Memory Allocation
     def allocate(self, size):
@@ -41,6 +34,13 @@ class BuddySystem:
         else:
             print("Error: Not enough memory to allocate.")
         return allocated_block
+
+    #Calculates the next power of two greater than or equal to the requested size
+    def _next_power_of_two(self, n):
+        power = 1
+        while power < n:
+            power *= 2
+        return power
 
     #To find the smallest free block that fits the request
     def _allocate_block(self, node, size):
@@ -61,6 +61,7 @@ class BuddySystem:
         self._split(node)
         return self._allocate_block(node, size)
     
+
     def _split(self, node):
         if node.left or node.right:
             return
